@@ -147,7 +147,7 @@ const App = () => {
 
   return (
     <div className="flex flex-1 flex-col w-[100vw] h-[100vh] items-center justify-start bg-white overflow-y-scroll pb-5">
-      <div className="max-h-[50px] w-full bg-[#be0c18] text-white font-bold text-lg text-center py-2">
+      <div className="max-h-[100px] w-full bg-[#be0c18] text-white font-bold text-xl text-center py-4">
         TravelinPass
       </div>
 
@@ -246,6 +246,7 @@ const App = () => {
                 </div>
               )}
 
+              {/* Camera */}
               <div className="flex flex-col gap-2">
                 <label hidden htmlFor="capture">
                   Capture
