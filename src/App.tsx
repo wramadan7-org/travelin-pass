@@ -25,7 +25,7 @@ const validationSchema = Yup.object().shape({
     .max(4, "Nomor penerbangan maksimal 4 karakter"),
   code_booking: Yup.string()
     .required("Kode pemesanan harus diisi")
-    .max(4, "Kode pemesanan maksimal 4 karakter"),
+    .max(6, "Kode pemesanan maksimal 6 karakter"),
   first_name: Yup.string().required("Nama depan harus diisi"),
   last_name: Yup.string().required("Nama belakang harus diisi"),
   date: Yup.date().required("Tanggal penerbangan harus diisi"),
