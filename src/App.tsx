@@ -20,8 +20,12 @@ interface InterfaceBookingTicket {
 
 const validationSchema = Yup.object().shape({
   airline: Yup.string().required("Maskapai harus diisi"),
-  flight_number: Yup.string().required("Nomor penerbangan harus diisi"),
-  code_booking: Yup.string().required("Kode pemesanan harus diisi"),
+  flight_number: Yup.string()
+    .required("Nomor penerbangan harus diisi")
+    .max(4, "Nomor penerbangan maksimal 4 karakter"),
+  code_booking: Yup.string()
+    .required("Kode pemesanan harus diisi")
+    .max(4, "Kode pemesanan maksimal 4 karakter"),
   first_name: Yup.string().required("Nama depan harus diisi"),
   last_name: Yup.string().required("Nama belakang harus diisi"),
   date: Yup.date().required("Tanggal penerbangan harus diisi"),
@@ -341,7 +345,7 @@ const App = () => {
                 </label>
 
                 <div className="border flex flex-row bg-white rounded-full px-3 h-10 items-center">
-                  <span className="border-r pr-2 h-full text-center flex items-center text-sm uppercase">
+                  <span className="border-r pr-2 h-full text-center flex items-center text-sm uppercase min-w-[30px]">
                     {formik?.values?.airline?.split("-")[0]?.trim()}
                   </span>
 
@@ -676,7 +680,7 @@ const App = () => {
                   onChange={formik.handleChange}
                 />
 
-                <span className="text-xs mb-1 font-semibold">
+                <span className="text-xs font-semibold">
                   Saya telah membaca dan menyetujui{" "}
                   <span className="text-[#d50f24] font-bold">
                     Syarat dan Ketentuan
@@ -691,8 +695,15 @@ const App = () => {
               />
 
               <button
+                disabled={
+                  !imageDataUrlState?.length ||
+                  !formik?.isValid ||
+                  formik?.isSubmitting
+                    ? true
+                    : false
+                }
                 type="submit"
-                className="bg-[#cc1124] text-white text-sm h-10 w-full outline-none hover:bg-[#f2162c] rounded-full hover:outline-none hover:border-none"
+                className="bg-[#cc1124] text-white text-sm h-10 w-full outline-none hover:bg-[#f2162c] rounded-full hover:outline-none hover:border-none disabled:bg-slate-300"
               >
                 Kirim
               </button>
