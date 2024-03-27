@@ -180,9 +180,12 @@ const App = () => {
             );
             formData.append(
               "flight_number",
-              `${values?.airline?.split("-")[0]?.trim()}${values.flight_number}`
+              `${values?.airline
+                ?.split("-")[0]
+                ?.trim()
+                ?.toUpperCase()}${values.flight_number?.toUpperCase()}`
             );
-            formData.append("code_booking", values.code_booking);
+            formData.append("code_booking", values.code_booking?.toUpperCase());
             formData.append("asal", values.from_destination);
             formData.append("tujuan", values.to_destination);
             formData.append(
@@ -347,14 +350,17 @@ const App = () => {
 
                 <div className="border flex flex-row bg-white rounded-full px-3 h-10 items-center">
                   <span className="border-r pr-2 h-full text-center flex items-center text-sm uppercase min-w-[30px]">
-                    {formik?.values?.airline?.split("-")[0]?.trim()}
+                    {formik?.values?.airline
+                      ?.split("-")[0]
+                      ?.trim()
+                      ?.toUpperCase()}
                   </span>
 
                   <Field
                     id="flight_number"
                     name="flight_number"
                     type="text"
-                    className="bg-white flex flex-1 rounded-r-full w-full h-full px-2 outline-none focus:outline-none text-sm"
+                    className="bg-white flex flex-1 rounded-r-full w-full h-full px-2 outline-none focus:outline-none text-xs uppercase"
                     placeholder="Nomor Penerbangan"
                     onChange={formik.handleChange}
                   />
@@ -378,7 +384,7 @@ const App = () => {
                   name="code_booking"
                   type="text"
                   placeholder="Kode Pemesanan"
-                  className="h-10 rounded-full outline-none focus:outline-none px-3 bg-white border text-sm"
+                  className="h-10 rounded-full outline-none focus:outline-none px-3 bg-white border text-xs uppercase"
                   onChange={formik.handleChange}
                 />
 
