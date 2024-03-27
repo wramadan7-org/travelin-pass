@@ -349,11 +349,8 @@ const App = () => {
                 </label>
 
                 <div className="border flex flex-row bg-white rounded-full px-3 h-10 items-center">
-                  <span className="border-r pr-2 h-full text-center flex items-center text-sm uppercase min-w-[30px]">
-                    {formik?.values?.airline
-                      ?.split("-")[0]
-                      ?.trim()
-                      ?.toUpperCase()}
+                  <span className="border-r pr-2 h-full text-center flex items-center text-xs uppercase min-w-[30px]">
+                    {formik?.values?.airline?.split("-")[0]?.trim()}
                   </span>
 
                   <Field
