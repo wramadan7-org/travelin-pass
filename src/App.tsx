@@ -56,11 +56,11 @@ const App = () => {
   );
   const [fileNameState, setFileNameState] = useState<string>("");
   const [base64ImageState, setBase64ImageState] = useState<string>("");
-  const [modalDownloadState, setModalDownloadState] = useState<boolean>(false);
+  const [modalDownloadState, setModalDownloadState] = useState<boolean>(true);
   const [loadingState, setLoadingState] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const base64Type = "data:image/jpeg;base64,";
+  const base64Type = "data:image/jpg;base64,";
 
   const handleOpenCamera = () => {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -147,584 +147,620 @@ const App = () => {
 
   return (
     <div className="flex flex-1 flex-col w-[100vw] h-[100vh] items-center justify-start bg-white overflow-y-scroll pb-5">
-      <div className="max-h-[100px] w-full bg-[#be0c18] text-white font-bold text-xl text-center py-4">
+      {/* <div className="max-h-[100px] w-full bg-[#be0c18] text-white font-bold text-xl text-center py-4">
         TravelinPass
+      </div> */}
+
+      <div className="relative max-h-[100px] w-full bg-[#be0c18] text-white font-bold text-xl text-center py-4">
+        {modalDownloadState && (
+          <button
+            onClick={() => setModalDownloadState(false)}
+            className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center p-2 rounded-full hover:bg-black/10 bg-white transition duration-200 focus:outline-none focus:ring-0 active:outline-none"
+            aria-label="Back"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-6 h-6 text-red-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+        )}
+        <span>TravelinPass</span>
       </div>
 
       {/* Content/Form */}
-      <div className="flex flex-col gap-3 text-black w-full px-5">
-        <span className="font-bold text-xl text-center my-5">
-          Tambahkan Penerbangan Saya
-        </span>
+      {!modalDownloadState && (
+        <div className="flex flex-col gap-3 text-black w-full px-5">
+          <span className="font-bold text-xl text-center my-5">
+            Tambahkan Penerbangan Saya
+          </span>
 
-        <Formik
-          initialValues={{
-            airline: "",
-            flight_number: "",
-            code_booking: "",
-            from_destination: "",
-            to_destination: "",
-            first_name: "",
-            last_name: "",
-            date: new Date(),
-            agree: false,
-          }}
-          validationSchema={validationSchema}
-          onSubmit={async (values, actions) => {
-            setLoadingState(true);
+          <Formik
+            initialValues={{
+              airline: "",
+              flight_number: "",
+              code_booking: "",
+              from_destination: "",
+              to_destination: "",
+              first_name: "",
+              last_name: "",
+              date: new Date(),
+              agree: false,
+            }}
+            validationSchema={validationSchema}
+            onSubmit={async (values, actions) => {
+              setLoadingState(true);
 
-            const formData = new FormData();
-            formData.append(
-              "maskapai",
-              `${values.airline?.split("-")[1].trim()}`
-            );
-            formData.append(
-              "flight_number",
-              `${values?.airline
-                ?.split("-")[0]
-                ?.trim()
-                ?.toUpperCase()}${values.flight_number?.toUpperCase()}`
-            );
-            formData.append("code_booking", values.code_booking?.toUpperCase());
-            formData.append("asal", values.from_destination);
-            formData.append("tujuan", values.to_destination);
-            formData.append(
-              "exp_date",
-              moment(values?.date).format("YYYY-MM-DD HH:mm:ss")
-            );
-            formData.append(
-              "name",
-              `${values.first_name.toUpperCase()} ${values.last_name.toUpperCase()}`
-            );
-
-            if (imageDataUrlState) {
-              const splitBase64 = imageDataUrlState?.split("base64,");
-              const base64Image = splitBase64[1];
-
-              formData.append("image_base64", base64Image);
-            }
-
-            try {
-              const response = await axios.post(
-                "https://denso.cudo.co.id/ap2hit",
-                formData,
-                {
-                  headers: {
-                    "Content-Type": "multipart/form-data",
-                  },
-                }
+              const formData = new FormData();
+              formData.append(
+                "maskapai",
+                `${values.airline?.split("-")[1].trim()}`
               );
-              // alert(JSON.stringify(values, null, 2));
-              actions.setSubmitting(false);
+              formData.append(
+                "flight_number",
+                `${values?.airline
+                  ?.split("-")[0]
+                  ?.trim()
+                  ?.toUpperCase()}${values.flight_number?.toUpperCase()}`
+              );
+              formData.append(
+                "code_booking",
+                values.code_booking?.toUpperCase()
+              );
+              formData.append("asal", values.from_destination);
+              formData.append("tujuan", values.to_destination);
+              formData.append(
+                "exp_date",
+                moment(values?.date).format("YYYY-MM-DD HH:mm:ss")
+              );
+              formData.append(
+                "name",
+                `${values.first_name.toUpperCase()} ${values.last_name.toUpperCase()}`
+              );
 
-              setFileNameState(response?.data?.public_data?.split(" ")[0]);
-              setBase64ImageState(response?.data?.qr_base64);
-              setModalDownloadState(true);
-            } catch (error) {
-              console.error("Error sending data: ", error);
-            } finally {
-              setLoadingState(false);
-              setImageDataUrlState("");
-              actions.resetForm({
-                values: {
-                  airline: "",
-                  flight_number: "",
-                  code_booking: "",
-                  from_destination: "",
-                  to_destination: "",
-                  first_name: "",
-                  last_name: "",
-                  date: new Date(),
-                  agree: false,
-                },
-              });
-            }
-          }}
-        >
-          {(formik) => (
-            <Form className="gap-5 flex flex-col">
-              {loadingState && (
-                <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-                  <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
-                </div>
-              )}
+              if (imageDataUrlState) {
+                const splitBase64 = imageDataUrlState?.split("base64,");
+                const base64Image = splitBase64[1];
 
-              {/* Camera */}
-              <div className="flex flex-col gap-2">
-                <label hidden htmlFor="capture">
-                  Capture
-                </label>
+                formData.append("image_base64", base64Image);
+              }
 
-                <div className="flex justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleOpenCamera}
-                    className="bg-[#cc1124] text-white text-sm h-10 w-full outline-none hover:bg-[#f2162c] rounded-full hover:outline-none hover:border-none"
-                  >
-                    Buka Kamera
-                  </button>
+              try {
+                const response = await axios.post(
+                  "https://denso.cudo.co.id/ap2hit",
+                  formData,
+                  {
+                    headers: {
+                      "Content-Type": "multipart/form-data",
+                    },
+                  }
+                );
+                // alert(JSON.stringify(values, null, 2));
+                actions.setSubmitting(false);
 
-                  <button
-                    type="button"
-                    onClick={handleCapture}
-                    className="bg-[#cc1124] text-white text-sm h-10 w-full outline-none hover:bg-[#f2162c] rounded-full hover:outline-none hover:border-none"
-                  >
-                    Ambil Foto
-                  </button>
-                </div>
-
-                {imageDataUrlState && (
-                  <div
-                    className="flex justify-center mt-10"
-                    style={{
-                      display: showCameraState ? "none" : "",
-                      height: "50%",
-                    }}
-                  >
-                    <img
-                      src={imageDataUrlState}
-                      className="rounded-md"
-                      alt="Captured"
-                    />
+                setFileNameState(response?.data?.public_data?.split(" ")[0]);
+                setBase64ImageState(response?.data?.qr_base64);
+                setModalDownloadState(true);
+              } catch (error) {
+                console.error("Error sending data: ", error);
+              } finally {
+                setLoadingState(false);
+                setImageDataUrlState("");
+                actions.resetForm({
+                  values: {
+                    airline: "",
+                    flight_number: "",
+                    code_booking: "",
+                    from_destination: "",
+                    to_destination: "",
+                    first_name: "",
+                    last_name: "",
+                    date: new Date(),
+                    agree: false,
+                  },
+                });
+              }
+            }}
+          >
+            {(formik) => (
+              <Form className="gap-5 flex flex-col">
+                {loadingState && (
+                  <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+                    <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
                   </div>
                 )}
 
-                <div className="flex flex-1 w-full h-40 items-center justify-center">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    style={{
-                      maxWidth: "50%",
-                      width: "100%",
-                      display: showCameraState ? "" : "none",
-                    }}
-                  />
+                {/* Camera */}
+                <div className="flex flex-col gap-2">
+                  <label hidden htmlFor="capture">
+                    Capture
+                  </label>
+
+                  <div className="flex justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleOpenCamera}
+                      className="bg-[#cc1124] text-white text-sm h-10 w-full outline-none hover:bg-[#f2162c] rounded-full hover:outline-none hover:border-none"
+                    >
+                      Buka Kamera
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleCapture}
+                      className="bg-[#cc1124] text-white text-sm h-10 w-full outline-none hover:bg-[#f2162c] rounded-full hover:outline-none hover:border-none"
+                    >
+                      Ambil Foto
+                    </button>
+                  </div>
+
+                  {imageDataUrlState && (
+                    <div
+                      className="flex justify-center mt-10"
+                      style={{
+                        display: showCameraState ? "none" : "",
+                        height: "50%",
+                      }}
+                    >
+                      <img
+                        src={imageDataUrlState}
+                        className="rounded-md"
+                        alt="Captured"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex flex-1 w-full h-40 items-center justify-center">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      style={{
+                        maxWidth: "50%",
+                        width: "100%",
+                        display: showCameraState ? "" : "none",
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Maskapai */}
-              <div className="flex flex-col gap-2">
-                <label hidden htmlFor="airline">
-                  Maskapai
-                </label>
+                {/* Maskapai */}
+                <div className="flex flex-col gap-2">
+                  <label hidden htmlFor="airline">
+                    Maskapai
+                  </label>
 
-                <div className="border flex flex-row bg-white rounded-full h-10 px-3 items-center">
-                  <Field
-                    as="select"
-                    id="airline"
+                  <div className="border flex flex-row bg-white rounded-full h-10 px-3 items-center">
+                    <Field
+                      as="select"
+                      id="airline"
+                      name="airline"
+                      className="bg-white flex flex-1 rounded-r-full w-full outline-none focus:outline-none text-sm h-full"
+                      onChange={formik.handleChange}
+                    >
+                      <option className="text-sm" value="">
+                        Pilih Maskapai
+                      </option>
+                      <option className="text-sm" value="GA - Garuda Indonesia">
+                        GA - Garuda Indonesia
+                      </option>
+                      <option className="text-sm" value="QG - Citilink">
+                        QG - Citilink
+                      </option>
+                      <option className="text-sm" value="JT - Lion Air">
+                        JT - Lion Air
+                      </option>
+                      <option className="text-sm" value="ID - Batik Air">
+                        ID - Batik Air
+                      </option>
+                    </Field>
+                  </div>
+
+                  <ErrorMessage
                     name="airline"
-                    className="bg-white flex flex-1 rounded-r-full w-full outline-none focus:outline-none text-sm h-full"
-                    onChange={formik.handleChange}
-                  >
-                    <option className="text-sm" value="">
-                      Pilih Maskapai
-                    </option>
-                    <option className="text-sm" value="GA - Garuda Indonesia">
-                      GA - Garuda Indonesia
-                    </option>
-                    <option className="text-sm" value="QG - Citilink">
-                      QG - Citilink
-                    </option>
-                    <option className="text-sm" value="JT - Lion Air">
-                      JT - Lion Air
-                    </option>
-                    <option className="text-sm" value="ID - Batik Air">
-                      ID - Batik Air
-                    </option>
-                  </Field>
-                </div>
-
-                <ErrorMessage
-                  name="airline"
-                  component="div"
-                  className="text-red-500 text-xs"
-                />
-              </div>
-
-              {/* Nomor Penerbangan */}
-              <div className="flex flex-col gap-2">
-                <label hidden htmlFor="flight_number">
-                  Nomor Penerbangan
-                </label>
-
-                <div className="border flex flex-row bg-white rounded-full px-3 h-10 items-center">
-                  <span className="border-r pr-2 h-full text-center flex items-center text-xs uppercase min-w-[30px]">
-                    {formik?.values?.airline?.split("-")[0]?.trim()}
-                  </span>
-
-                  <Field
-                    id="flight_number"
-                    name="flight_number"
-                    type="text"
-                    className="bg-white flex flex-1 rounded-r-full w-full h-full px-2 outline-none focus:outline-none text-xs uppercase"
-                    placeholder="Nomor Penerbangan"
-                    onChange={formik.handleChange}
+                    component="div"
+                    className="text-red-500 text-xs"
                   />
                 </div>
 
-                <ErrorMessage
-                  name="flight_number"
-                  component="div"
-                  className="text-red-500 text-xs"
-                />
-              </div>
+                {/* Nomor Penerbangan */}
+                <div className="flex flex-col gap-2">
+                  <label hidden htmlFor="flight_number">
+                    Nomor Penerbangan
+                  </label>
 
-              {/* Kode Pemesanan */}
-              <div className="flex flex-col gap-2">
-                <label hidden htmlFor="code_booking">
-                  Kode Pemesanan
-                </label>
+                  <div className="border flex flex-row bg-white rounded-full px-3 h-10 items-center">
+                    <span className="border-r pr-2 h-full text-center flex items-center text-xs uppercase min-w-[30px]">
+                      {formik?.values?.airline?.split("-")[0]?.trim()}
+                    </span>
 
-                <Field
-                  id="code_booking"
-                  name="code_booking"
-                  type="text"
-                  placeholder="Kode Pemesanan"
-                  className="h-10 rounded-full outline-none focus:outline-none px-3 bg-white border text-xs uppercase"
-                  onChange={formik.handleChange}
-                />
+                    <Field
+                      id="flight_number"
+                      name="flight_number"
+                      type="text"
+                      className="bg-white flex flex-1 rounded-r-full w-full h-full px-2 outline-none focus:outline-none text-xs uppercase"
+                      placeholder="Nomor Penerbangan"
+                      onChange={formik.handleChange}
+                    />
+                  </div>
 
-                <ErrorMessage
-                  name="code_booking"
-                  component="div"
-                  className="text-red-500 text-xs"
-                />
-              </div>
+                  <ErrorMessage
+                    name="flight_number"
+                    component="div"
+                    className="text-red-500 text-xs"
+                  />
+                </div>
 
-              {/* Asal */}
-              <div className="flex flex-col gap-2">
-                <label hidden htmlFor="from_destination">
-                  Asal
-                </label>
+                {/* Kode Pemesanan */}
+                <div className="flex flex-col gap-2">
+                  <label hidden htmlFor="code_booking">
+                    Kode Pemesanan
+                  </label>
 
-                <div className="border flex flex-row bg-white rounded-full h-10 px-3 items-center">
                   <Field
-                    as="select"
-                    id="from_destination"
+                    id="code_booking"
+                    name="code_booking"
+                    type="text"
+                    placeholder="Kode Pemesanan"
+                    className="h-10 rounded-full outline-none focus:outline-none px-3 bg-white border text-xs uppercase"
+                    onChange={formik.handleChange}
+                  />
+
+                  <ErrorMessage
+                    name="code_booking"
+                    component="div"
+                    className="text-red-500 text-xs"
+                  />
+                </div>
+
+                {/* Asal */}
+                <div className="flex flex-col gap-2">
+                  <label hidden htmlFor="from_destination">
+                    Asal
+                  </label>
+
+                  <div className="border flex flex-row bg-white rounded-full h-10 px-3 items-center">
+                    <Field
+                      as="select"
+                      id="from_destination"
+                      name="from_destination"
+                      className="bg-white flex flex-1 rounded-r-full w-full outline-none focus:outline-none text-sm h-full"
+                      onChange={formik.handleChange}
+                    >
+                      <option className="text-sm" value="">
+                        Asal Keberangkatan
+                      </option>
+                      <option value="CGK">
+                        Bandara Internasional Soekarno-Hatta, Tangerang, Banten
+                      </option>
+                      <option value="PLM">
+                        Bandar Udara Internasional Sultan Mahmud Badaruddin II,
+                        Palembang, Sumatra Selatan
+                      </option>
+                      <option value="PNK">
+                        Bandar Udara Supadio, Pontianak, Kalimantan Barat
+                      </option>
+                      <option value="KNO">
+                        Bandar Udara Internasional Kualanamu, Medan, Sumatra
+                        Utara
+                      </option>
+                      <option value="BTJ">
+                        Bandar Udara Internasional Sultan Iskandar Muda, Banda
+                        Aceh, Aceh
+                      </option>
+                      <option value="PDG">
+                        Bandar Udara Internasional Minangkabau, Padang, Sumatra
+                        Barat
+                      </option>
+                      <option value="PKU">
+                        Bandar Udara Internasional Sultan Syarif Kasim II,
+                        Pekanbaru, Riau
+                      </option>
+                      <option value="BDO">
+                        Bandar Udara Husein Sastranegara, Bandung, Jawa Barat
+                      </option>
+                      <option value="TNJ">
+                        Bandar Udara Raja Haji Fisabilillah, Tanjung Pinang,
+                        Kepulauan Riau
+                      </option>
+                      <option value="PGK">
+                        Bandar Udara Depati Amir, Pangkal Pinang, Bangka
+                        Belitung
+                      </option>
+                      <option value="DJB">
+                        Bandar Udara Sultan Thaha, Jambi
+                      </option>
+                      <option value="DTB">
+                        Bandar Udara Silangit, Siborong-Borong, Sumatra Utara
+                      </option>
+                      <option value="KJT">
+                        Bandar Udara Internasional Kertajati, Majalengka, Jawa
+                        Barat
+                      </option>
+                      <option value="BWX">
+                        Bandar Udara Banyuwangi, Banyuwangi, Jawa Timur
+                      </option>
+                      <option value="PKY">
+                        Bandar Udara Tjilik Riwut, Palangka Raya, Kalimantan
+                        Tengah
+                      </option>
+                      <option value="PWL">
+                        Bandar Udara Jenderal Besar Sudirman, Purbalingga, Jawa
+                        Tengah
+                      </option>
+                      <option value="TKG">
+                        Bandar Udara Radin Inten II, Lampung
+                      </option>
+                      <option value="BKS">
+                        Bandar Udara Fatmawati Soekarno, Bengkulu
+                      </option>
+                      <option value="TJQ">
+                        Bandar Udara H.A.S. Hanandjoeddin, Tanjung Pandan,
+                        Bangka-Belitung
+                      </option>
+                      <option value="NBX">
+                        Bandar Udara Nabire, Nabire, Papua Tengah
+                      </option>
+                      <option value="MOH">
+                        Bandar Udara Maleo, Morowali, Sulawesi Tengah
+                      </option>
+                      <option value="YIA">
+                        Bandar Udara Yogyakarta International Airport,
+                        Yogyakarta
+                      </option>
+                      <option value="SUB">
+                        Bandar Udara International Juanda, Surabaya
+                      </option>
+                    </Field>
+                  </div>
+
+                  <ErrorMessage
                     name="from_destination"
-                    className="bg-white flex flex-1 rounded-r-full w-full outline-none focus:outline-none text-sm h-full"
-                    onChange={formik.handleChange}
-                  >
-                    <option className="text-sm" value="">
-                      Asal Keberangkatan
-                    </option>
-                    <option value="CGK">
-                      Bandara Internasional Soekarno-Hatta, Tangerang, Banten
-                    </option>
-                    <option value="PLM">
-                      Bandar Udara Internasional Sultan Mahmud Badaruddin II,
-                      Palembang, Sumatra Selatan
-                    </option>
-                    <option value="PNK">
-                      Bandar Udara Supadio, Pontianak, Kalimantan Barat
-                    </option>
-                    <option value="KNO">
-                      Bandar Udara Internasional Kualanamu, Medan, Sumatra Utara
-                    </option>
-                    <option value="BTJ">
-                      Bandar Udara Internasional Sultan Iskandar Muda, Banda
-                      Aceh, Aceh
-                    </option>
-                    <option value="PDG">
-                      Bandar Udara Internasional Minangkabau, Padang, Sumatra
-                      Barat
-                    </option>
-                    <option value="PKU">
-                      Bandar Udara Internasional Sultan Syarif Kasim II,
-                      Pekanbaru, Riau
-                    </option>
-                    <option value="BDO">
-                      Bandar Udara Husein Sastranegara, Bandung, Jawa Barat
-                    </option>
-                    <option value="TNJ">
-                      Bandar Udara Raja Haji Fisabilillah, Tanjung Pinang,
-                      Kepulauan Riau
-                    </option>
-                    <option value="PGK">
-                      Bandar Udara Depati Amir, Pangkal Pinang, Bangka Belitung
-                    </option>
-                    <option value="DJB">
-                      Bandar Udara Sultan Thaha, Jambi
-                    </option>
-                    <option value="DTB">
-                      Bandar Udara Silangit, Siborong-Borong, Sumatra Utara
-                    </option>
-                    <option value="KJT">
-                      Bandar Udara Internasional Kertajati, Majalengka, Jawa
-                      Barat
-                    </option>
-                    <option value="BWX">
-                      Bandar Udara Banyuwangi, Banyuwangi, Jawa Timur
-                    </option>
-                    <option value="PKY">
-                      Bandar Udara Tjilik Riwut, Palangka Raya, Kalimantan
-                      Tengah
-                    </option>
-                    <option value="PWL">
-                      Bandar Udara Jenderal Besar Sudirman, Purbalingga, Jawa
-                      Tengah
-                    </option>
-                    <option value="TKG">
-                      Bandar Udara Radin Inten II, Lampung
-                    </option>
-                    <option value="BKS">
-                      Bandar Udara Fatmawati Soekarno, Bengkulu
-                    </option>
-                    <option value="TJQ">
-                      Bandar Udara H.A.S. Hanandjoeddin, Tanjung Pandan,
-                      Bangka-Belitung
-                    </option>
-                    <option value="NBX">
-                      Bandar Udara Nabire, Nabire, Papua Tengah
-                    </option>
-                    <option value="MOH">
-                      Bandar Udara Maleo, Morowali, Sulawesi Tengah
-                    </option>
-                    <option value="YIA">
-                      Bandar Udara Yogyakarta International Airport, Yogyakarta
-                    </option>
-                    <option value="SUB">
-                      Bandar Udara International Juanda, Surabaya
-                    </option>
-                  </Field>
+                    component="div"
+                    className="text-red-500 text-xs"
+                  />
                 </div>
 
-                <ErrorMessage
-                  name="from_destination"
-                  component="div"
-                  className="text-red-500 text-xs"
-                />
-              </div>
+                {/* Tujuan */}
+                <div className="flex flex-col gap-2">
+                  <label hidden htmlFor="to_detination">
+                    Tujuan
+                  </label>
 
-              {/* Tujuan */}
-              <div className="flex flex-col gap-2">
-                <label hidden htmlFor="to_detination">
-                  Tujuan
-                </label>
+                  <div className="border flex flex-row bg-white rounded-full h-10 px-3 items-center">
+                    <Field
+                      as="select"
+                      id="to_destination"
+                      name="to_destination"
+                      className="bg-white flex flex-1 rounded-r-full w-full outline-none focus:outline-none text-sm h-full"
+                      onChange={formik.handleChange}
+                    >
+                      <option className="text-sm" value="">
+                        Tujuan Keberangkatan
+                      </option>
+                      <option value="SUB">
+                        Bandar Udara International Juanda, Surabaya
+                      </option>
+                      <option value="CGK">
+                        Bandara Internasional Soekarno-Hatta, Tangerang, Banten
+                      </option>
+                      <option value="PLM">
+                        Bandar Udara Internasional Sultan Mahmud Badaruddin II,
+                        Palembang, Sumatra Selatan
+                      </option>
+                      <option value="PNK">
+                        Bandar Udara Supadio, Pontianak, Kalimantan Barat
+                      </option>
+                      <option value="KNO">
+                        Bandar Udara Internasional Kualanamu, Medan, Sumatra
+                        Utara
+                      </option>
+                      <option value="BTJ">
+                        Bandar Udara Internasional Sultan Iskandar Muda, Banda
+                        Aceh, Aceh
+                      </option>
+                      <option value="PDG">
+                        Bandar Udara Internasional Minangkabau, Padang, Sumatra
+                        Barat
+                      </option>
+                      <option value="PKU">
+                        Bandar Udara Internasional Sultan Syarif Kasim II,
+                        Pekanbaru, Riau
+                      </option>
+                      <option value="BDO">
+                        Bandar Udara Husein Sastranegara, Bandung, Jawa Barat
+                      </option>
+                      <option value="TNJ">
+                        Bandar Udara Raja Haji Fisabilillah, Tanjung Pinang,
+                        Kepulauan Riau
+                      </option>
+                      <option value="PGK">
+                        Bandar Udara Depati Amir, Pangkal Pinang, Bangka
+                        Belitung
+                      </option>
+                      <option value="DJB">
+                        Bandar Udara Sultan Thaha, Jambi
+                      </option>
+                      <option value="DTB">
+                        Bandar Udara Silangit, Siborong-Borong, Sumatra Utara
+                      </option>
+                      <option value="KJT">
+                        Bandar Udara Internasional Kertajati, Majalengka, Jawa
+                        Barat
+                      </option>
+                      <option value="BWX">
+                        Bandar Udara Banyuwangi, Banyuwangi, Jawa Timur
+                      </option>
+                      <option value="PKY">
+                        Bandar Udara Tjilik Riwut, Palangka Raya, Kalimantan
+                        Tengah
+                      </option>
+                      <option value="PWL">
+                        Bandar Udara Jenderal Besar Sudirman, Purbalingga, Jawa
+                        Tengah
+                      </option>
+                      <option value="TKG">
+                        Bandar Udara Radin Inten II, Lampung
+                      </option>
+                      <option value="BKS">
+                        Bandar Udara Fatmawati Soekarno, Bengkulu
+                      </option>
+                      <option value="TJQ">
+                        Bandar Udara H.A.S. Hanandjoeddin, Tanjung Pandan,
+                        Bangka-Belitung
+                      </option>
+                      <option value="NBX">
+                        Bandar Udara Nabire, Nabire, Papua Tengah
+                      </option>
+                      <option value="MOH">
+                        Bandar Udara Maleo, Morowali, Sulawesi Tengah
+                      </option>
+                      <option value="YIA">
+                        Bandar Udara Yogyakarta International Airport,
+                        Yogyakarta
+                      </option>
+                    </Field>
+                  </div>
 
-                <div className="border flex flex-row bg-white rounded-full h-10 px-3 items-center">
-                  <Field
-                    as="select"
-                    id="to_destination"
+                  <ErrorMessage
                     name="to_destination"
-                    className="bg-white flex flex-1 rounded-r-full w-full outline-none focus:outline-none text-sm h-full"
+                    component="div"
+                    className="text-red-500 text-xs"
+                  />
+                </div>
+
+                {/* Nama Depan */}
+                <div className="flex flex-col gap-2">
+                  <label hidden htmlFor="first_name">
+                    Nama Depan
+                  </label>
+
+                  <Field
+                    id="first_name"
+                    name="first_name"
+                    type="text"
+                    placeholder="Nama Depan"
+                    className="h-10 rounded-full outline-none focus:outline-none px-3 bg-white border uppercase text-xs"
                     onChange={formik.handleChange}
-                  >
-                    <option className="text-sm" value="">
-                      Tujuan Keberangkatan
-                    </option>
-                    <option value="SUB">
-                      Bandar Udara International Juanda, Surabaya
-                    </option>
-                    <option value="CGK">
-                      Bandara Internasional Soekarno-Hatta, Tangerang, Banten
-                    </option>
-                    <option value="PLM">
-                      Bandar Udara Internasional Sultan Mahmud Badaruddin II,
-                      Palembang, Sumatra Selatan
-                    </option>
-                    <option value="PNK">
-                      Bandar Udara Supadio, Pontianak, Kalimantan Barat
-                    </option>
-                    <option value="KNO">
-                      Bandar Udara Internasional Kualanamu, Medan, Sumatra Utara
-                    </option>
-                    <option value="BTJ">
-                      Bandar Udara Internasional Sultan Iskandar Muda, Banda
-                      Aceh, Aceh
-                    </option>
-                    <option value="PDG">
-                      Bandar Udara Internasional Minangkabau, Padang, Sumatra
-                      Barat
-                    </option>
-                    <option value="PKU">
-                      Bandar Udara Internasional Sultan Syarif Kasim II,
-                      Pekanbaru, Riau
-                    </option>
-                    <option value="BDO">
-                      Bandar Udara Husein Sastranegara, Bandung, Jawa Barat
-                    </option>
-                    <option value="TNJ">
-                      Bandar Udara Raja Haji Fisabilillah, Tanjung Pinang,
-                      Kepulauan Riau
-                    </option>
-                    <option value="PGK">
-                      Bandar Udara Depati Amir, Pangkal Pinang, Bangka Belitung
-                    </option>
-                    <option value="DJB">
-                      Bandar Udara Sultan Thaha, Jambi
-                    </option>
-                    <option value="DTB">
-                      Bandar Udara Silangit, Siborong-Borong, Sumatra Utara
-                    </option>
-                    <option value="KJT">
-                      Bandar Udara Internasional Kertajati, Majalengka, Jawa
-                      Barat
-                    </option>
-                    <option value="BWX">
-                      Bandar Udara Banyuwangi, Banyuwangi, Jawa Timur
-                    </option>
-                    <option value="PKY">
-                      Bandar Udara Tjilik Riwut, Palangka Raya, Kalimantan
-                      Tengah
-                    </option>
-                    <option value="PWL">
-                      Bandar Udara Jenderal Besar Sudirman, Purbalingga, Jawa
-                      Tengah
-                    </option>
-                    <option value="TKG">
-                      Bandar Udara Radin Inten II, Lampung
-                    </option>
-                    <option value="BKS">
-                      Bandar Udara Fatmawati Soekarno, Bengkulu
-                    </option>
-                    <option value="TJQ">
-                      Bandar Udara H.A.S. Hanandjoeddin, Tanjung Pandan,
-                      Bangka-Belitung
-                    </option>
-                    <option value="NBX">
-                      Bandar Udara Nabire, Nabire, Papua Tengah
-                    </option>
-                    <option value="MOH">
-                      Bandar Udara Maleo, Morowali, Sulawesi Tengah
-                    </option>
-                    <option value="YIA">
-                      Bandar Udara Yogyakarta International Airport, Yogyakarta
-                    </option>
-                  </Field>
+                  />
+
+                  <ErrorMessage
+                    name="first_name"
+                    component="div"
+                    className="text-red-500 text-xs"
+                  />
+                </div>
+
+                {/* Nama Belakang */}
+                <div className="flex flex-col gap-2">
+                  <label hidden htmlFor="last_name">
+                    Nama Belakang
+                  </label>
+
+                  <Field
+                    id="last_name"
+                    name="last_name"
+                    type="text"
+                    placeholder="Nama Belakang"
+                    className="h-10 rounded-full outline-none focus:outline-none px-3 bg-white border uppercase text-xs"
+                    onChange={formik.handleChange}
+                  />
+
+                  <ErrorMessage
+                    name="last_name"
+                    component="div"
+                    className="text-red-500 text-xs"
+                  />
+                </div>
+
+                {/* Tanggal Expired */}
+                <div className="flex flex-col">
+                  <label hidden htmlFor="date">
+                    Date
+                  </label>
+
+                  <DatePicker
+                    id="date"
+                    name="date"
+                    selected={formBookingTicketState?.date}
+                    onChange={(event) =>
+                      setFormBookingTicketState((prevState) => ({
+                        ...prevState,
+                        date: event,
+                      }))
+                    }
+                    className="h-10 w-full rounded-full outline-none focus:outline-none px-3 bg-white border uppercase text-xs"
+                    minDate={new Date()}
+                    maxDate={tomorrow}
+                  />
+
+                  <ErrorMessage
+                    name="date"
+                    component="div"
+                    className="text-red-500 text-xs"
+                  />
+                </div>
+
+                {/* Setuju */}
+                <div className="flex flex-row gap-2 items-center">
+                  <Field
+                    id="agree"
+                    name="agree"
+                    type="checkbox"
+                    className="checked:text-[#d50f24] text-white"
+                    onChange={formik.handleChange}
+                  />
+
+                  <span className="text-xs font-semibold">
+                    Saya telah membaca dan menyetujui{" "}
+                    <span className="text-[#d50f24] font-bold">
+                      Syarat dan Ketentuan
+                    </span>
+                  </span>
                 </div>
 
                 <ErrorMessage
-                  name="to_destination"
-                  component="div"
-                  className="text-red-500 text-xs"
-                />
-              </div>
-
-              {/* Nama Depan */}
-              <div className="flex flex-col gap-2">
-                <label hidden htmlFor="first_name">
-                  Nama Depan
-                </label>
-
-                <Field
-                  id="first_name"
-                  name="first_name"
-                  type="text"
-                  placeholder="Nama Depan"
-                  className="h-10 rounded-full outline-none focus:outline-none px-3 bg-white border uppercase text-xs"
-                  onChange={formik.handleChange}
-                />
-
-                <ErrorMessage
-                  name="first_name"
-                  component="div"
-                  className="text-red-500 text-xs"
-                />
-              </div>
-
-              {/* Nama Belakang */}
-              <div className="flex flex-col gap-2">
-                <label hidden htmlFor="last_name">
-                  Nama Belakang
-                </label>
-
-                <Field
-                  id="last_name"
-                  name="last_name"
-                  type="text"
-                  placeholder="Nama Belakang"
-                  className="h-10 rounded-full outline-none focus:outline-none px-3 bg-white border uppercase text-xs"
-                  onChange={formik.handleChange}
-                />
-
-                <ErrorMessage
-                  name="last_name"
-                  component="div"
-                  className="text-red-500 text-xs"
-                />
-              </div>
-
-              {/* Tanggal Expired */}
-              <div className="flex flex-col">
-                <label hidden htmlFor="date">
-                  Date
-                </label>
-
-                <DatePicker
-                  id="date"
-                  name="date"
-                  selected={formBookingTicketState?.date}
-                  onChange={(event) =>
-                    setFormBookingTicketState((prevState) => ({
-                      ...prevState,
-                      date: event,
-                    }))
-                  }
-                  className="h-10 w-full rounded-full outline-none focus:outline-none px-3 bg-white border uppercase text-xs"
-                  minDate={new Date()}
-                  maxDate={tomorrow}
-                />
-
-                <ErrorMessage
-                  name="date"
-                  component="div"
-                  className="text-red-500 text-xs"
-                />
-              </div>
-
-              {/* Setuju */}
-              <div className="flex flex-row gap-2 items-center">
-                <Field
-                  id="agree"
                   name="agree"
-                  type="checkbox"
-                  className="checked:text-[#d50f24] text-white"
-                  onChange={formik.handleChange}
+                  component="div"
+                  className="text-red-500 text-xs"
                 />
 
-                <span className="text-xs font-semibold">
-                  Saya telah membaca dan menyetujui{" "}
-                  <span className="text-[#d50f24] font-bold">
-                    Syarat dan Ketentuan
-                  </span>
-                </span>
-              </div>
-
-              <ErrorMessage
-                name="agree"
-                component="div"
-                className="text-red-500 text-xs"
-              />
-
-              <button
-                disabled={
-                  !imageDataUrlState?.length ||
-                  !formik?.isValid ||
-                  formik?.isSubmitting
-                    ? true
-                    : false
-                }
-                type="submit"
-                className="bg-[#cc1124] text-white text-sm h-10 w-full outline-none hover:bg-[#f2162c] rounded-full hover:outline-none hover:border-none disabled:bg-slate-300"
-              >
-                Kirim
-              </button>
-            </Form>
-          )}
-        </Formik>
-      </div>
-
+                <button
+                  disabled={
+                    !imageDataUrlState?.length ||
+                    !formik?.isValid ||
+                    formik?.isSubmitting
+                      ? true
+                      : false
+                  }
+                  type="submit"
+                  className="bg-[#cc1124] text-white text-sm h-10 w-full outline-none hover:bg-[#f2162c] rounded-full hover:outline-none hover:border-none disabled:bg-slate-300"
+                >
+                  Kirim
+                </button>
+              </Form>
+            )}
+          </Formik>
+        </div>
+      )}
       {modalDownloadState && (
         <div
-          className="absolute h-full w-full backdrop-blur-sm items-center z-50 rounded-md flex justify-center px-3"
-          onClick={() => setModalDownloadState(false)}
+          className="w-full backdrop-blur-sm items-center z-50 rounded-md flex justify-center px-3"
+          // onClick={() => setModalDownloadState(false)}
         >
-          <div className="w-full h-fit bg-gray-300 rounded-md flex flex-col items-center justify-start px-3 py-5 gap-4">
+          <div className="w-full bg-gray-300 rounded-md flex flex-col items-center justify-start px-3 py-5 gap-4">
             <img
               src={`${base64Type}${base64ImageState}`}
-              className="w-1/3 h-1/2 rounded-md"
+              className="rounded-md"
               alt="response-image"
             />
 
