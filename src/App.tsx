@@ -92,7 +92,7 @@ const App = () => {
           videoRef.current.videoWidth,
           videoRef.current.videoHeight
         );
-        const imageDataUrl = canvas.toDataURL("image/jpeg");
+        const imageDataUrl = canvas.toDataURL("image/jpeg", 0.8);
         setImageDataUrlState(imageDataUrl);
 
         // Menutup kamera
