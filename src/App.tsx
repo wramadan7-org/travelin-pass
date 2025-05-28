@@ -56,7 +56,7 @@ const App = () => {
   );
   const [fileNameState, setFileNameState] = useState<string>("");
   const [base64ImageState, setBase64ImageState] = useState<string>("");
-  const [modalDownloadState, setModalDownloadState] = useState<boolean>(true);
+  const [modalDownloadState, setModalDownloadState] = useState<boolean>(false);
   const [loadingState, setLoadingState] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
